@@ -2,11 +2,23 @@
 <html>
     <head>
         <title>{{title}}</title>
+        <style>
+            .error {color: red;}
+        </style>
     </head>
 <body>
     <div>
         <a href='/logout'>log out</a>
-    </div>
+    </div> 
+    <!-- flash function -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="{{category}}">{{message}}</li> <!-- display message in li tag -->
+        {% endfor %}
+        </ul>
+    {% endwith %}
+
     {% block content %}
     {% endblock %}
 

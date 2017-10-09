@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, session
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -44,10 +44,13 @@ def login():
         user = User.query.filter_by(email=email).first() #verify users password Or else will return special value none
         if user and user.password == password:           #checks if user exists
             session['email'] = email                     # remember" user has logged in
+            flash("Logged in")                           #send them a flash message when logged in and put code in base.html
+            print(session)
             return redirect('/')                         #when user logs in, redirect to home page. 
-        else:
-            # TODO tell them why login failed. if don't login, return back to form
-            return '<h1>ERROR!</h1>'                     #for invalid user logins
+        else:                                       #use flash messages instead of error messages
+            flash('User password incorrect, or user does not exist', 'error') # TODO tell them why login failed. if don't login, return back to form.
+                                                        #error is category string and need to go modify loop in base.thml
+            #return '<h1>ERROR!</h1>'                     #for invalid user logins
 
     return render_template('login.html')
 
@@ -104,10 +107,10 @@ def delete_tasks():
     db.session.add(task)                                    #instead of deleting task, like below, put in new column called completed
     db.session.commit()
     
-                                                            """
-                                                            db.session.delete(task) #flags task object for deletion
-                                                            db.session.commit() #the commit runs the query that actually does the deletion
-                                                            """
+                                                           
+                                                            #db.session.delete(task) #flags task object for deletion
+                                                            #db.session.commit() #the commit runs the query that actually does the deletion
+                                                            
     return redirect('/')                                    #return content from request, redirect to main page
 
 if __name__ == '__main__':
