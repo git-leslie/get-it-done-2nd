@@ -12,16 +12,18 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     completed = db.Column(db.Boolean)                   #don't hard delete tasks
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, name):
+    def __init__(self, name, owner):
         self.name = name
         self.completed = False
+        self.owner = owner
 
 class User(db.Model):                                   # create model for user class
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)      #email < 120 and no 2 ppl have same email
     password = db.Column(db.String(120))
-
+    tasks = db.relationship('Task', backref='owner')
                                                         #add initializer/constructor for user class
     def __init__(self, email, password):                #users should always have email and password, so those are parameters
         self.email = email
@@ -85,6 +87,8 @@ def logout():
 @app.route('/', methods=['POST', 'GET'])
 def index():
 
+    owner = User.query.filter_by(email=session['email']).first() #get user and assign task to that user
+
     if request.method == 'POST':                         #if the incoming request is the form filled out in todos.html
         task_name = request.form['task']                 #then we want to pull the data out and create a new task
         new_task = Task(task_name)                       #create a new task that's a task object
@@ -92,8 +96,8 @@ def index():
         db.session.commit()                              #commit to database NEED TO DO
 
     #tasks = Task.query.all() #display tasks from the DB (pt2 we added in tasks using Terminal)
-    tasks = Task.query.filter_by(completed=False).all()     #before it kept all the tasks, now we want to filter buy ones not completed. Give all the things not completed
-    completed_tasks = Task.query.filter_by(completed=True).all() #shows completed tasks below and add to return statement
+    tasks = Task.query.filter_by(completed=False, owner=owner).all()     #before it kept all the tasks, now we want to filter buy ones not completed. Give all the things not completed
+    completed_tasks = Task.query.filter_by(completed=True, owner=owner).all() #shows completed tasks below and add to return statement
     return render_template('todos.html',title="Get It Done!", 
         tasks=tasks, completed_tasks=completed_tasks)
 
