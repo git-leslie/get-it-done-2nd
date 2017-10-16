@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from hashutils import make_pw_hash, check_pw_hash
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -22,12 +23,14 @@ class Task(db.Model):
 class User(db.Model):                                   # create model for user class
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)      #email < 120 and no 2 ppl have same email
-    password = db.Column(db.String(120))
+    #password = db.Column(db.String(120))
+    pw_hash = db.Column(db.String(120))
     tasks = db.relationship('Task', backref='owner')
                                                         #add initializer/constructor for user class
     def __init__(self, email, password):                #users should always have email and password, so those are parameters
         self.email = email
-        self.password = password
+        #self.password = password
+        self.pw_hash = make_pw_hash(password)
 
 
 @app.before_request                                     #run this function before call request handler before upcoming request
@@ -44,7 +47,8 @@ def login():
         email = request.form['email']
         password = request.form['password']
         user = User.query.filter_by(email=email).first() #verify users password Or else will return special value none
-        if user and user.password == password:           #checks if user exists
+        #if user and user.password == password:           #checks if user exists
+        if user and check_pw_hash(password, user.pw_hash):
             session['email'] = email                     # remember" user has logged in
             flash("Logged in")                           #send them a flash message when logged in and put code in base.html
             print(session)
